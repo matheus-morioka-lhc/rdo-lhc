@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<title>Diário da Obra — LHC</title>
+<style>
+  :root{
+    --preto:#000; --branco:#fff; --cinza:#595959; --grade:#D9D9D9; --fundo:#F4F4F4;
+    --raio:14px;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;padding:0;background:var(--fundo);color:var(--preto);
+    font-family:Arial,Helvetica,sans-serif;font-size:17px;line-height:1.35}
+  header{background:var(--preto);color:var(--branco);padding:14px 16px 12px;position:sticky;top:0;z-index:5}
+  header .marca{font-weight:bold;font-size:15px;letter-spacing:.5px}
+  header .obra{font-size:19px;font-weight:bold;margin-top:4px}
+  header .emp{font-size:14px;color:#cfcfcf;margin-top:2px}
+  .demo{background:#fff;color:#000;border:2px dashed #000;margin:12px 16px 0;padding:10px 12px;border-radius:10px;font-size:14px}
+  main{max-width:560px;margin:0 auto;padding:8px 16px 120px}
+  section{background:var(--branco);border:1px solid var(--grade);border-radius:var(--raio);padding:16px;margin:14px 0}
+  h2{font-size:18px;margin:0 0 4px;display:flex;gap:10px;align-items:center}
+  h2 .n{display:inline-flex;width:28px;height:28px;border-radius:50%;background:var(--preto);color:var(--branco);
+    align-items:center;justify-content:center;font-size:15px;flex:none}
+  .dica{color:var(--cinza);font-size:14px;margin:0 0 12px}
+  .sub{font-weight:bold;font-size:15px;margin:14px 0 8px}
+  .opcoes{display:flex;flex-wrap:wrap;gap:8px}
+  .op{border:2px solid var(--preto);background:var(--branco);color:var(--preto);border-radius:12px;
+    padding:12px 14px;font-size:16px;min-height:48px;cursor:pointer;font-family:inherit;text-align:left}
+  .op[aria-pressed="true"]{background:var(--preto);color:var(--branco)}
+  .op.grande{flex:1 1 45%;text-align:center;font-weight:bold}
+  .op.local{padding:9px 12px;min-height:40px;font-size:15px;border-width:1.5px}
+  .linha{display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--grade)}
+  .linha:last-child{border-bottom:0}
+  .linha .nome{font-size:16px}
+  .cont{display:flex;align-items:center;gap:6px}
+  .cont button{width:46px;height:46px;border-radius:12px;border:2px solid var(--preto);background:var(--branco);
+    font-size:24px;font-weight:bold;cursor:pointer;font-family:inherit;line-height:1}
+  .cont button.mais{background:var(--preto);color:var(--branco)}
+  .cont output{min-width:34px;text-align:center;font-size:20px;font-weight:bold}
+  .total{margin-top:10px;padding:10px 12px;background:var(--fundo);border-radius:10px;font-weight:bold;display:flex;justify-content:space-between}
+  .etapa{border:1px solid var(--grade);border-radius:12px;margin:8px 0;overflow:hidden}
+  .etapa > button{width:100%;border:0;background:var(--branco);padding:14px;font-size:16px;text-align:left;
+    display:flex;gap:12px;align-items:center;cursor:pointer;font-family:inherit}
+  .caixa{width:26px;height:26px;border:2px solid var(--preto);border-radius:6px;flex:none;display:flex;align-items:center;justify-content:center;font-weight:bold}
+  .etapa.on > button{background:var(--preto);color:var(--branco)}
+  .etapa.on .caixa{border-color:var(--branco)}
+  .etapa .locais{padding:10px 12px 14px;background:#FAFAFA;display:none}
+  .etapa.on .locais{display:block}
+  .etapa .locais p{margin:0 0 8px;font-size:14px;color:var(--cinza)}
+  select,textarea{width:100%;font-size:17px;padding:12px;border:2px solid var(--preto);border-radius:12px;background:var(--branco);font-family:inherit}
+  textarea{min-height:80px;resize:vertical}
+  .horas{display:flex;gap:10px}
+  .horas label{flex:1;font-size:14px;color:var(--cinza)}
+  .bloco-par{border:2px solid var(--preto);border-radius:12px;padding:12px;margin:10px 0;position:relative}
+  .bloco-par .remover{position:absolute;right:8px;top:8px;border:0;background:none;font-size:14px;text-decoration:underline;cursor:pointer;color:var(--cinza)}
+  .add{border:2px dashed var(--preto);background:var(--branco);border-radius:12px;width:100%;padding:12px;font-size:16px;cursor:pointer;font-family:inherit;margin-top:6px}
+  .escondido{display:none}
+  .alerta{border:2px solid var(--preto);background:#FFF;padding:10px 12px;border-radius:10px;font-size:14px;margin-top:10px}
+  .erro{border-left:6px solid var(--preto);background:#fff;padding:10px 12px;margin:10px 0;font-size:15px;font-weight:bold}
+  .rodape{position:fixed;left:0;right:0;bottom:0;background:var(--branco);border-top:1px solid var(--grade);padding:12px 16px calc(12px + env(safe-area-inset-bottom));z-index:6}
+  .rodape .in{max-width:560px;margin:0 auto}
+  .btn{width:100%;border:0;border-radius:14px;background:var(--preto);color:var(--branco);font-size:19px;font-weight:bold;padding:16px;cursor:pointer;font-family:inherit}
+  .btn.sec{background:var(--branco);color:var(--preto);border:2px solid var(--preto)}
+  .btn:disabled{opacity:.5}
+  .fim{text-align:center;padding:30px 10px}
+  .fim .ok{width:72px;height:72px;border-radius:50%;background:var(--preto);color:var(--branco);font-size:40px;display:flex;align-items:center;justify-content:center;margin:0 auto 14px}
+  .fim .id{font-size:14px;color:var(--cinza);margin:6px 0 20px}
+  .fim .btn{margin:8px 0}
+  .carregando{text-align:center;padding:60px 20px;color:var(--cinza)}
+  .resumo{font-size:15px}
+  .resumo div{padding:4px 0;border-bottom:1px solid var(--grade)}
+  .resumo b{display:inline-block;min-width:110px}
+</style>
+</head>
+<body>
+<header>
+  <div class="marca">LHC CONSTRUÇÕES · DIÁRIO DA OBRA</div>
+  <div class="obra" id="hObra">Carregando…</div>
+  <div class="emp" id="hEmp"></div>
+</header>
+<div id="avisoDemo" class="demo escondido">MODO DEMONSTRAÇÃO: nenhuma informação é enviada. Use o link que a LHC mandou para você.</div>
+
+<main id="app"><div class="carregando">Carregando o formulário…</div></main>
+
+<div class="rodape escondido" id="rodape"><div class="in">
+  <button class="btn" id="btnEnviar" type="button">ENVIAR DIÁRIO DE HOJE</button>
+</div></div>
+
+<script>
+/* =========================================================
+   CONFIGURAÇÃO — trocar pela URL do Web App do Google Apps Script
+   (Implantar > Nova implantação > App da Web > copiar URL /exec)
+   ========================================================= */
+const API_URL = "COLE_AQUI_A_URL_DO_APPS_SCRIPT";
+
+/* Configuração de demonstração (só aparece sem link válido) */
+const DEMO = {
+  ok:true, demo:true, token:"DEMO",
+  obra:{cod:"3XXX", nome:"OBRA DE DEMONSTRAÇÃO", locais:["Bloco ADM","Sala de aula 01","Sala de aula 02","Cozinha","Banheiros","Muro externo","Cobertura geral"]},
+  emp:{nome:"EMPREITEIRO DE DEMONSTRAÇÃO"},
+  zap:"",
+  listas:{
+    funcoes:["Pedreiro","Servente","Pintor","Eletricista","Auxiliar de eletricista","Encanador","Carpinteiro","Serralheiro","Telhadista","Montador de estrutura metálica","Gesseiro / forrista","Azulejista","Operador de máquina","Motorista","Encarregado"],
+    etapas:["Serviços preliminares","Demolições e remoções","Transporte e retirada de entulho","Fundação e estrutura","Alvenaria","Cobertura","Forro","Esquadrias e ferragens","Revestimentos","Pisos e calçada","Pintura","Instalações elétricas, lógica e SPDA","Instalações hidrossanitárias e pluviais","Alambrado e complementares","Limpeza final"],
+    motivos:["Chuva","Falta de material","Falta de frente de serviço","Falta de energia","Falta de água","Aguardando definição da LHC","Pedido da escola / prefeitura","Fiscal mandou parar","Equipamento quebrado","Acidente","Outro"],
+    intercorrencias:["Acidente ou quase acidente","Dano em algo da escola","Vazamento","Problema escondido encontrado (madeira podre, fiação, trinca…)","Reclamação de vizinho ou da escola","Furto ou sumiço de material","Outro"],
+    materiais:["Telha","Estrutura metálica","Madeira","Tinta / massa","Cimento / argamassa","Areia / brita","Tijolo / bloco","Material elétrico","Material hidráulico","Forro","Esquadria (porta / janela)","Outro"],
+    pedidos:["Falta material","Falta ferramenta ou equipamento","Precisa de definição do serviço","Precisa liberar área / sala","Precisa de medida ou projeto","Outro"],
+    ordens:["Mudar o serviço","Parar o serviço","Refazer algo","Outro"]
+  }
+};
+
+const $ = s => document.querySelector(s);
+const el = (tag, attrs={}, ...kids) => { const e=document.createElement(tag);
+  for (const [k,v] of Object.entries(attrs)) { if(k==="class") e.className=v; else if(k.startsWith("on")) e.addEventListener(k.slice(2),v); else e.setAttribute(k,v); }
+  kids.flat().forEach(k => e.append(k instanceof Node ? k : document.createTextNode(k))); return e; };
+const HORAS = []; for(let h=6;h<=19;h++){ HORAS.push(String(h).padStart(2,"0")+":00"); if(h<19) HORAS.push(String(h).padStart(2,"0")+":30"); }
+function hojeISO(off=0){ const d=new Date(); d.setDate(d.getDate()+off); const t=new Date(d.getTime()-d.getTimezoneOffset()*60000); return t.toISOString().slice(0,10); }
+function br(iso){ const [a,m,d]=iso.split("-"); return `${d}/${m}/${a}`; }
+function uid(){ return (crypto.randomUUID ? crypto.randomUUID() : Date.now()+"-"+Math.random().toString(16).slice(2)); }
+function lsGet(k){ try{ return JSON.parse(localStorage.getItem(k)); }catch(e){ return null; } }
+function lsSet(k,v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} }
+function lsDel(k){ try{ localStorage.removeItem(k); }catch(e){} }
+
+let CFG=null;
+let S=null; // estado do formulário
+
+function estadoNovo(){
+  return { envioId: uid(), dia: "hoje",
+    clima:{manha:null, tarde:null}, trabalho:{manha:null, tarde:null},
+    ninguem:false, efetivo:{}, etapas:{},
+    paralisou:null, paralisacoes:[],
+    intercorreu:null, intercorrencias:[], intercorrenciaTexto:"",
+    material:null, materiais:[],
+    pedido:null, pedidos:[], pedidoTexto:"",
+    fiscal:null, fiscalOrdem:null, ordens:[], ordemTexto:"" };
+}
+function salvarRascunho(){ if(CFG) lsSet("rdo-rascunho-"+CFG.token+"-"+hojeISO(), S); }
+
+/* ---------- componentes ---------- */
+function botaoOpcao(texto, ativo, aoClicar, extra=""){
+  return el("button",{type:"button",class:"op "+extra,"aria-pressed":ativo?"true":"false",onclick:aoClicar},texto);
+}
+function simNao(chave, onChange){
+  const w=el("div",{class:"opcoes"});
+  [["Não",false],["Sim",true]].forEach(([t,v])=>w.append(botaoOpcao(t,S[chave]===v,()=>{S[chave]=v; onChange&&onChange(); render();},"grande")));
+  return w;
+}
+function multi(lista, arr, cls=""){
+  const w=el("div",{class:"opcoes"});
+  lista.forEach(item=>{
+    const on=arr.includes(item);
+    w.append(botaoOpcao(item,on,()=>{ const i=arr.indexOf(item); if(i>=0) arr.splice(i,1); else arr.push(item); render(); },cls));
+  });
+  return w;
+}
+function selHora(valor, onch){
+  const s=el("select",{onchange:e=>{onch(e.target.value); salvarRascunho();}});
+  s.append(el("option",{value:""},"— escolha —"));
+  HORAS.forEach(h=>{ const o=el("option",{value:h},h); if(h===valor) o.selected=true; s.append(o); });
+  return s;
+}
+function secao(n, titulo, dica, ...conteudo){
+  return el("section",{},el("h2",{},el("span",{class:"n"},String(n)),titulo), dica?el("p",{class:"dica"},dica):"", ...conteudo);
+}
+
+/* ---------- render ---------- */
+function render(){
+  salvarRascunho();
+  const L=CFG.listas, app=$("#app"); app.innerHTML="";
+  let n=1;
+
+  // 1 - dia
+  app.append(secao(n++,"Qual dia você está informando?","",
+    el("div",{class:"opcoes"},
+      botaoOpcao("HOJE · "+br(hojeISO()), S.dia==="hoje", ()=>{S.dia="hoje";render();},"grande"),
+      botaoOpcao("ONTEM · "+br(hojeISO(-1)), S.dia==="ontem", ()=>{S.dia="ontem";render();},"grande")),
+    S.dia==="ontem"?el("div",{class:"alerta"},"Envio de ontem fica marcado como ENVIADO COM ATRASO. O certo é mandar no mesmo dia."):""));
+
+  // 2 - clima
+  const climas=["Sol","Nublado","Chuva fraca","Chuva forte"];
+  const turno=(t,rot)=>[
+    el("div",{class:"sub"},rot+": como estava o tempo?"),
+    el("div",{class:"opcoes"},climas.map(c=>botaoOpcao(c,S.clima[t]===c,()=>{S.clima[t]=c;render();},"grande"))),
+    el("div",{class:"sub"},rot+": deu para trabalhar?"),
+    el("div",{class:"opcoes"},[["Sim",true],["Não",false]].map(([x,v])=>botaoOpcao(x,S.trabalho[t]===v,()=>{S.trabalho[t]=v;render();},"grande")))
+  ];
+  app.append(secao(n++,"Tempo","Marque manhã e tarde.",...turno("manha","MANHÃ"),...turno("tarde","TARDE")));
+
+  // 3 - equipe
+  const lista=el("div",{});
+  let total=0;
+  L.funcoes.forEach(f=>{
+    const q=S.efetivo[f]||0; total+=q;
+    lista.append(el("div",{class:"linha"},el("span",{class:"nome"},f),
+      el("div",{class:"cont"},
+        el("button",{type:"button","aria-label":"menos "+f,onclick:()=>{S.efetivo[f]=Math.max(0,(S.efetivo[f]||0)-1); S.ninguem=false; render();}},"−"),
+        el("output",{},String(q)),
+        el("button",{type:"button",class:"mais","aria-label":"mais "+f,onclick:()=>{S.efetivo[f]=(S.efetivo[f]||0)+1; S.ninguem=false; render();}},"+"))));
+  });
+  app.append(secao(n++,"Sua equipe hoje","Quantas pessoas da SUA empresa trabalharam, por função. Não precisa colocar nomes.",
+    el("div",{class:"opcoes",style:"margin-bottom:8px"},botaoOpcao("Ninguém da minha equipe trabalhou hoje",S.ninguem,()=>{S.ninguem=!S.ninguem; if(S.ninguem){S.efetivo={};S.etapas={};} render();},"grande")),
+    S.ninguem?"":lista,
+    S.ninguem?"":el("div",{class:"total"},el("span",{},"TOTAL DE PESSOAS"),el("span",{},String(total)))));
+
+  // 4 - serviços
+  if(!S.ninguem){
+    const wrap=el("div",{});
+    L.etapas.forEach(et=>{
+      const on=!!S.etapas[et];
+      const box=el("div",{class:"etapa"+(on?" on":"")},
+        el("button",{type:"button","aria-pressed":on?"true":"false",onclick:()=>{ if(on) delete S.etapas[et]; else S.etapas[et]=[]; render(); }},
+          el("span",{class:"caixa"},on?"✓":""), el("span",{},et)),
+        el("div",{class:"locais"},el("p",{},"Onde? (marque um ou mais)"), multi(CFG.obra.locais, S.etapas[et]||[], "local")));
+      wrap.append(box);
+    });
+    app.append(secao(n++,"O que foi feito hoje","Toque no serviço e depois marque onde foi feito.",wrap));
+  }
+
+  // 5 - paralisação
+  const par=el("div",{});
+  if(S.paralisou){
+    S.paralisacoes.forEach((p,i)=>{
+      par.append(el("div",{class:"bloco-par"},
+        S.paralisacoes.length>1?el("button",{type:"button",class:"remover",onclick:()=>{S.paralisacoes.splice(i,1);render();}},"remover"):"",
+        el("div",{class:"sub",style:"margin-top:0"},"Por quê?"),
+        el("div",{class:"opcoes"},L.motivos.map(m=>botaoOpcao(m,p.motivo===m,()=>{p.motivo=m;render();}))),
+        el("div",{class:"sub"},"Parou das… até…"),
+        el("div",{class:"horas"},
+          el("label",{},"Das",selHora(p.inicio,v=>p.inicio=v)),
+          el("label",{},"Até",selHora(p.fim,v=>p.fim=v)))));
+    });
+    par.append(el("button",{type:"button",class:"add",onclick:()=>{S.paralisacoes.push({motivo:null,inicio:"",fim:""});render();}},"+ Teve outra parada"));
+  }
+  app.append(secao(n++,"O serviço parou hoje?","Parada por chuva, falta de material, pedido da escola, etc.",
+    simNao("paralisou",()=>{ if(S.paralisou && !S.paralisacoes.length) S.paralisacoes=[{motivo:null,inicio:"",fim:""}]; if(!S.paralisou) S.paralisacoes=[]; }), par));
+
+  // 6 - intercorrência
+  app.append(secao(n++,"Aconteceu algo fora do normal?","",
+    simNao("intercorreu",()=>{ if(!S.intercorreu){S.intercorrencias=[];S.intercorrenciaTexto="";} }),
+    S.intercorreu?el("div",{},el("div",{class:"sub"},"O quê?"),multi(L.intercorrencias,S.intercorrencias),
+      el("div",{class:"sub"},"Se quiser, explique em poucas palavras (opcional)"),
+      Object.assign(el("textarea",{maxlength:"300",oninput:e=>{S.intercorrenciaTexto=e.target.value;salvarRascunho();}}),{value:S.intercorrenciaTexto})):""));
+
+  // 7 - material
+  app.append(secao(n++,"Chegou material hoje?","",
+    simNao("material",()=>{ if(!S.material) S.materiais=[]; }),
+    S.material?el("div",{},el("div",{class:"sub"},"Qual?"),multi(L.materiais,S.materiais)):""));
+
+  // 8 - pedido
+  app.append(secao(n++,"Está faltando alguma coisa para trabalhar?","Se sim, a LHC vai cuidar disso.",
+    simNao("pedido",()=>{ if(!S.pedido){S.pedidos=[];S.pedidoTexto="";} }),
+    S.pedido?el("div",{},el("div",{class:"sub"},"O que falta?"),multi(L.pedidos,S.pedidos),
+      el("div",{class:"sub"},"Detalhe (opcional)"),
+      Object.assign(el("textarea",{maxlength:"300",oninput:e=>{S.pedidoTexto=e.target.value;salvarRascunho();}}),{value:S.pedidoTexto})):""));
+
+  // 9 - fiscal
+  app.append(secao(n++,"O fiscal da prefeitura veio hoje?","",
+    simNao("fiscal",()=>{ if(!S.fiscal){S.fiscalOrdem=null;S.ordens=[];S.ordemTexto="";} }),
+    S.fiscal?el("div",{},
+      el("div",{class:"sub"},"Ele pediu alguma coisa de boca?"),
+      simNao("fiscalOrdem",()=>{ if(!S.fiscalOrdem){S.ordens=[];S.ordemTexto="";} }),
+      S.fiscalOrdem?el("div",{},el("div",{class:"sub"},"O quê?"),multi(L.ordens,S.ordens),
+        el("div",{class:"sub"},"Explique em poucas palavras"),
+        Object.assign(el("textarea",{maxlength:"300",oninput:e=>{S.ordemTexto=e.target.value;salvarRascunho();}}),{value:S.ordemTexto}),
+        el("div",{class:"alerta"},"A LHC vai confirmar esse pedido por escrito com a prefeitura. Não mude o serviço sem a confirmação da LHC.")):""):""));
+
+  $("#rodape").classList.remove("escondido");
+}
+
+/* ---------- validação ---------- */
+function validar(){
+  const e=[];
+  if(!S.clima.manha||!S.clima.tarde) e.push("Marque o tempo da manhã e da tarde.");
+  if(S.trabalho.manha===null||S.trabalho.tarde===null) e.push("Marque se deu para trabalhar de manhã e de tarde.");
+  const total=Object.values(S.efetivo).reduce((a,b)=>a+b,0);
+  if(!S.ninguem && total===0) e.push("Informe quantas pessoas trabalharam ou marque \"Ninguém trabalhou\".");
+  if(!S.ninguem && total>0 && Object.keys(S.etapas).length===0) e.push("Marque pelo menos um serviço feito hoje.");
+  Object.entries(S.etapas).forEach(([et,loc])=>{ if(!loc.length) e.push("Marque onde foi feito: "+et+"."); });
+  if(S.paralisou===null) e.push("Responda se o serviço parou.");
+  S.paralisacoes.forEach((p,i)=>{
+    if(!p.motivo) e.push("Parada "+(i+1)+": marque o motivo.");
+    if(!p.inicio||!p.fim) e.push("Parada "+(i+1)+": marque o horário de início e de fim.");
+    else if(p.fim<=p.inicio) e.push("Parada "+(i+1)+": o fim tem que ser depois do início.");
+  });
+  if(S.ninguem && !S.paralisou) e.push("Se ninguém trabalhou, marque a parada e o motivo.");
+  [["intercorreu","Responda se aconteceu algo fora do normal."],["material","Responda se chegou material."],["pedido","Responda se está faltando alguma coisa."],["fiscal","Responda se o fiscal veio."]]
+    .forEach(([k,m])=>{ if(S[k]===null) e.push(m); });
+  if(S.intercorreu && !S.intercorrencias.length) e.push("Marque o que aconteceu.");
+  if(S.material && !S.materiais.length) e.push("Marque qual material chegou.");
+  if(S.pedido && !S.pedidos.length) e.push("Marque o que está faltando.");
+  if(S.fiscal && S.fiscalOrdem===null) e.push("Responda se o fiscal pediu alguma coisa de boca.");
+  if(S.fiscalOrdem && (!S.ordens.length || !S.ordemTexto.trim())) e.push("Marque e explique o que o fiscal pediu.");
+  return e;
+}
+
+/* ---------- montagem do envio ---------- */
+function payload(){
+  return { token:CFG.token, envioId:S.envioId, dataRef:(S.dia==="hoje"?hojeISO():hojeISO(-1)), dia:S.dia,
+    clima:S.clima, trabalho:S.trabalho, ninguem:S.ninguem,
+    efetivo:Object.fromEntries(Object.entries(S.efetivo).filter(([,q])=>q>0)),
+    etapas:S.etapas, paralisacoes:S.paralisou?S.paralisacoes:[],
+    intercorrencias:S.intercorreu?S.intercorrencias:[], intercorrenciaTexto:S.intercorrenciaTexto.trim(),
+    materiais:S.material?S.materiais:[], pedidos:S.pedido?S.pedidos:[], pedidoTexto:S.pedidoTexto.trim(),
+    fiscal:!!S.fiscal, fiscalOrdem:!!S.fiscalOrdem, ordens:S.ordens, ordemTexto:S.ordemTexto.trim(),
+    agent:navigator.userAgent.slice(0,120) };
+}
+function textoWhats(p, id){
+  const ef=Object.entries(p.efetivo).map(([f,q])=>`${q} ${f}`).join(", ")||"ninguém";
+  const et=Object.entries(p.etapas).map(([e,l])=>`- ${e}: ${l.join(", ")}`).join("\n")||"- nenhum";
+  const pa=p.paralisacoes.map(x=>`- ${x.motivo} (${x.inicio} às ${x.fim})`).join("\n")||"- não";
+  let t=`*DIÁRIO DA OBRA ${id?"· "+id:""}*\nObra: ${CFG.obra.cod} - ${CFG.obra.nome}\nEmpreiteiro: ${CFG.emp.nome}\nDia: ${br(p.dataRef)}${p.dia==="ontem"?" (ENVIADO COM ATRASO)":""}\n`+
+    `Tempo: manhã ${p.clima.manha} (${p.trabalho.manha?"trabalhou":"NÃO trabalhou"}) · tarde ${p.clima.tarde} (${p.trabalho.tarde?"trabalhou":"NÃO trabalhou"})\n`+
+    `Equipe: ${ef}\nServiços:\n${et}\nParadas:\n${pa}\n`;
+  if(p.intercorrencias.length) t+=`Fora do normal: ${p.intercorrencias.join(", ")}${p.intercorrenciaTexto?" - "+p.intercorrenciaTexto:""}\n`;
+  if(p.materiais.length) t+=`Material recebido: ${p.materiais.join(", ")}\n`;
+  if(p.pedidos.length) t+=`Faltando: ${p.pedidos.join(", ")}${p.pedidoTexto?" - "+p.pedidoTexto:""}\n`;
+  if(p.fiscal) t+=`Fiscal veio: sim${p.fiscalOrdem?` · pediu de boca: ${p.ordens.join(", ")} - ${p.ordemTexto}`:""}\n`;
+  return t;
+}
+function linkZap(texto){ const n=(CFG.zap||"").replace(/\D/g,""); return (n?`https://wa.me/${n}`:"https://wa.me/")+"?text="+encodeURIComponent(texto); }
+
+async function enviar(){
+  const erros=validar();
+  document.querySelectorAll(".erro").forEach(x=>x.remove());
+  if(erros.length){
+    const box=el("div",{class:"erro"},"Falta responder:",el("ul",{},erros.map(x=>el("li",{},x))));
+    $("#app").prepend(box); box.scrollIntoView({behavior:"smooth"}); return;
+  }
+  const p=payload(), b=$("#btnEnviar"); b.disabled=true; b.textContent="ENVIANDO…";
+  if(CFG.demo){ setTimeout(()=>telaFim(p,"DEMO-0001",true),600); return; }
+  try{
+    const r=await fetch(API_URL,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify({acao:"enviar",dados:p})});
+    const j=await r.json();
+    if(!j.ok) throw new Error(j.erro||"erro");
+    lsDel("rdo-rascunho-"+CFG.token+"-"+hojeISO());
+    telaFim(p,j.id,true);
+  }catch(err){
+    lsSet("rdo-pendente-"+CFG.token, p);
+    telaFim(p,null,false);
+  }
+}
+function telaFim(p,id,ok){
+  $("#rodape").classList.add("escondido");
+  const app=$("#app"); app.innerHTML="";
+  const fotos=`*FOTOS DO DIÁRIO ${id||""}*\nObra: ${CFG.obra.cod} - ${CFG.obra.nome}\nEmpreiteiro: ${CFG.emp.nome}\nDia: ${br(p.dataRef)}\n(mande as fotos logo abaixo desta mensagem)`;
+  if(ok){
+    app.append(el("div",{class:"fim"},
+      el("div",{class:"ok"},"✓"),
+      el("h2",{style:"justify-content:center"},"Diário enviado. Obrigado!"),
+      el("div",{class:"id"},"Nº do envio: "+id),
+      el("p",{},"Agora mande as fotos do dia pelo WhatsApp. A mensagem já abre pronta; é só anexar as fotos."),
+      el("a",{href:linkZap(fotos),target:"_blank",rel:"noopener"},el("button",{class:"btn",type:"button"},"MANDAR FOTOS PELO WHATSAPP")),
+      el("button",{class:"btn sec",type:"button",onclick:()=>{S=estadoNovo();render();window.scrollTo(0,0);}},"Fazer outro envio")));
+  }else{
+    app.append(el("div",{class:"fim"},
+      el("h2",{style:"justify-content:center"},"Sem conexão agora"),
+      el("p",{},"O diário ficou guardado neste celular. Tente de novo quando tiver sinal, ou mande pelo WhatsApp."),
+      el("button",{class:"btn",type:"button",onclick:()=>reenviarPendente()},"TENTAR DE NOVO"),
+      el("a",{href:linkZap(textoWhats(p,null)),target:"_blank",rel:"noopener"},el("button",{class:"btn sec",type:"button"},"MANDAR PELO WHATSAPP"))));
+  }
+}
+async function reenviarPendente(){
+  const p=lsGet("rdo-pendente-"+CFG.token); if(!p) return;
+  try{
+    const r=await fetch(API_URL,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify({acao:"enviar",dados:p})});
+    const j=await r.json(); if(!j.ok) throw new Error(j.erro);
+    lsDel("rdo-pendente-"+CFG.token); telaFim(p,j.id,true);
+  }catch(e){ alertaSimples("Ainda sem conexão. Tente de novo em alguns minutos."); }
+}
+function alertaSimples(msg){ const d=el("div",{class:"erro"},msg); $("#app").prepend(d); setTimeout(()=>d.remove(),5000); }
+
+/* ---------- início ---------- */
+async function iniciar(){
+  const t=new URLSearchParams(location.search).get("t");
+  if(!t || API_URL.startsWith("COLE_AQUI")){ CFG=DEMO; $("#avisoDemo").classList.remove("escondido"); }
+  else{
+    try{
+      const r=await fetch(API_URL+"?acao=config&t="+encodeURIComponent(t));
+      CFG=await r.json();
+      if(!CFG.ok){ $("#app").innerHTML=""; $("#app").append(el("div",{class:"carregando"},"Este link não está ativo. Fale com a LHC.")); $("#hObra").textContent="Link inativo"; return; }
+      CFG.token=t;
+    }catch(e){ $("#app").innerHTML=""; $("#app").append(el("div",{class:"carregando"},"Sem conexão. Abra o link de novo quando tiver sinal.")); $("#hObra").textContent="Sem conexão"; return; }
+  }
+  $("#hObra").textContent=CFG.obra.cod+" · "+CFG.obra.nome;
+  $("#hEmp").textContent=CFG.emp.nome;
+  S=lsGet("rdo-rascunho-"+CFG.token+"-"+hojeISO()) || estadoNovo();
+  render();
+  if(!CFG.demo && lsGet("rdo-pendente-"+CFG.token)){
+    const d=el("div",{class:"erro"},"Existe um envio anterior que não chegou. ",el("button",{class:"btn sec",type:"button",style:"margin-top:8px",onclick:reenviarPendente},"ENVIAR O PENDENTE"));
+    $("#app").prepend(d);
+  }
+}
+$("#btnEnviar").addEventListener("click",enviar);
+iniciar();
+</script>
+</body>
+</html>
