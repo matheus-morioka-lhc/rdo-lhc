@@ -94,6 +94,7 @@
    (Implantar > Nova implantação > App da Web > copiar URL /exec)
    ========================================================= */
 const API_URL = "https://script.google.com/macros/s/AKfycbzjDjDmmpEvbMcmGRvqAGt79cTsoaAkno2FBtDy6s1owQRLU9Bp1BZx0Qej6uzGtOHK/exec";
+const VERSAO = "v07";
 /* Configuração de demonstração (só aparece sem link válido) */
 const DEMO = {
   ok:true, demo:true, token:"DEMO",
@@ -107,7 +108,8 @@ const DEMO = {
     intercorrencias:["Acidente ou quase acidente","Dano em algo da escola","Vazamento","Problema escondido encontrado (madeira podre, fiação, trinca…)","Reclamação de vizinho ou da escola","Furto ou sumiço de material","Outro"],
     materiais:["Telha","Estrutura metálica","Madeira","Tinta / massa","Cimento / argamassa","Areia / brita","Tijolo / bloco","Material elétrico","Material hidráulico","Forro","Esquadria (porta / janela)","Outro"],
     pedidos:["Falta material","Falta ferramenta ou equipamento","Precisa de definição do serviço","Precisa liberar área / sala","Precisa de medida ou projeto","Outro"],
-    ordens:["Mudar o serviço","Parar o serviço","Refazer algo","Outro"]
+    ordens:["Mudar o serviço","Parar o serviço","Refazer algo","Mandou começar serviço novo","Outro"],
+    equipamentos:["Andaime","Escora metálica","Betoneira","Caçamba de entulho","Martelete / rompedor","Gerador","Compressor / pistola de pintura","Politriz / lixadeira de piso","Compactador / sapo","Placa vibratória","Plataforma elevatória","Escada","Máquina de solda","Serra circular / mármore","Furadeira / parafusadeira","Aspirador de pó","Retroescavadeira","Caminhão","Outro"]
   }
 };
 
@@ -130,6 +132,7 @@ function estadoNovo(){
   return { envioId: uid(), dia: "hoje",
     clima:{manha:null, tarde:null}, trabalho:{manha:null, tarde:null},
     ninguem:false, efetivo:{}, etapas:{},
+    equip:null, equipamentos:{},
     paralisou:null, paralisacoes:[],
     intercorreu:null, intercorrencias:[], intercorrenciaTexto:"",
     material:null, materiais:[],
@@ -175,7 +178,7 @@ function render(){
   app.append(secao(n++,"Qual dia você está informando?","",
     el("div",{class:"opcoes"},
       botaoOpcao("HOJE · "+br(hojeISO()), S.dia==="hoje", ()=>{S.dia="hoje";render();},"grande"),
-      botaoOpcao("ONTEM · "+br(hojeISO(-1)), S.dia==="ontem", ()=>{S.dia="ontem";render();},"grande")),
+      CFG.aceitaOntem===false?"":botaoOpcao("ONTEM · "+br(hojeISO(-1)), S.dia==="ontem", ()=>{S.dia="ontem";render();},"grande")),
     S.dia==="ontem"?el("div",{class:"alerta"},"Envio de ontem fica marcado como ENVIADO COM ATRASO. O certo é mandar no mesmo dia."):""));
 
   // 2 - clima
@@ -200,7 +203,7 @@ function render(){
         el("button",{type:"button",class:"mais","aria-label":"mais "+f,onclick:()=>{S.efetivo[f]=(S.efetivo[f]||0)+1; S.ninguem=false; render();}},"+"))));
   });
   app.append(secao(n++,"Sua equipe hoje","Quantas pessoas da SUA empresa trabalharam, por função. Não precisa colocar nomes.",
-    el("div",{class:"opcoes",style:"margin-bottom:8px"},botaoOpcao("Ninguém da minha equipe trabalhou hoje",S.ninguem,()=>{S.ninguem=!S.ninguem; if(S.ninguem){S.efetivo={};S.etapas={};} render();},"grande")),
+    el("div",{class:"opcoes",style:"margin-bottom:8px"},botaoOpcao("Ninguém da minha equipe trabalhou hoje",S.ninguem,()=>{S.ninguem=!S.ninguem; if(S.ninguem){S.efetivo={};S.etapas={};S.equip=null;S.equipamentos={};} render();},"grande")),
     S.ninguem?"":lista,
     S.ninguem?"":el("div",{class:"total"},el("span",{},"TOTAL DE PESSOAS"),el("span",{},String(total)))));
 
@@ -216,6 +219,29 @@ function render(){
       wrap.append(box);
     });
     app.append(secao(n++,"O que foi feito hoje","Toque no serviço e depois marque onde foi feito.",wrap));
+
+    // equipamentos (v07)
+    const eqw=el("div",{});
+    if(S.equip){
+      (L.equipamentos||[]).forEach(nome=>{
+        const it=S.equipamentos[nome], on=!!it;
+        const box=el("div",{class:"etapa"+(on?" on":"")},
+          el("button",{type:"button","aria-pressed":on?"true":"false",onclick:()=>{ if(on) delete S.equipamentos[nome]; else S.equipamentos[nome]={qtd:1,origem:null}; render(); }},
+            el("span",{class:"caixa"},on?"✓":""), el("span",{},nome)),
+          on?el("div",{class:"locais"},
+            el("div",{class:"linha"},el("span",{class:"nome"},"Quantos?"),
+              el("div",{class:"cont"},
+                el("button",{type:"button","aria-label":"menos "+nome,onclick:()=>{it.qtd=Math.max(1,it.qtd-1);render();}},"−"),
+                el("output",{},String(it.qtd)),
+                el("button",{type:"button",class:"mais","aria-label":"mais "+nome,onclick:()=>{it.qtd++;render();}},"+"))),
+            el("p",{style:"margin:10px 0 8px"},"De quem é?"),
+            el("div",{class:"opcoes"},[["Da LHC (alugado)","LHC"],["Meu / da minha empresa","PROPRIO"],["Não sei","NS"]]
+              .map(([t,v])=>botaoOpcao(t,it.origem===v,()=>{it.origem=v;render();},"local")))):"");
+        eqw.append(box);
+      });
+    }
+    app.append(secao(n++,"Usou máquina ou equipamento hoje?","Andaime, betoneira, caçamba, gerador, martelete, etc.",
+      simNao("equip",()=>{ if(!S.equip) S.equipamentos={}; }), eqw));
   }
 
   // 5 - paralisação
@@ -266,6 +292,7 @@ function render(){
         Object.assign(el("textarea",{maxlength:"300",oninput:e=>{S.ordemTexto=e.target.value;salvarRascunho();}}),{value:S.ordemTexto}),
         el("div",{class:"alerta"},"A LHC vai confirmar esse pedido por escrito com a prefeitura. Não mude o serviço sem a confirmação da LHC.")):""):""));
 
+  app.append(el("p",{class:"dica",style:"text-align:center"},"Diário da Obra LHC · "+VERSAO));
   $("#rodape").classList.remove("escondido");
 }
 
@@ -278,6 +305,9 @@ function validar(){
   if(!S.ninguem && total===0) e.push("Informe quantas pessoas trabalharam ou marque \"Ninguém trabalhou\".");
   if(!S.ninguem && total>0 && Object.keys(S.etapas).length===0) e.push("Marque pelo menos um serviço feito hoje.");
   Object.entries(S.etapas).forEach(([et,loc])=>{ if(!loc.length) e.push("Marque onde foi feito: "+et+"."); });
+  if(!S.ninguem && S.equip===null) e.push("Responda se usou máquina ou equipamento.");
+  if(S.equip && !Object.keys(S.equipamentos).length) e.push("Marque qual equipamento foi usado.");
+  Object.entries(S.equipamentos).forEach(([k,v])=>{ if(!v.origem) e.push("Equipamento "+k+": marque de quem é."); });
   if(S.paralisou===null) e.push("Responda se o serviço parou.");
   S.paralisacoes.forEach((p,i)=>{
     if(!p.motivo) e.push("Parada "+(i+1)+": marque o motivo.");
@@ -301,6 +331,7 @@ function payload(){
     clima:S.clima, trabalho:S.trabalho, ninguem:S.ninguem,
     efetivo:Object.fromEntries(Object.entries(S.efetivo).filter(([,q])=>q>0)),
     etapas:S.etapas, paralisacoes:S.paralisou?S.paralisacoes:[],
+    equipamentos:(S.equip&&!S.ninguem)?S.equipamentos:{}, versao:VERSAO,
     intercorrencias:S.intercorreu?S.intercorrencias:[], intercorrenciaTexto:S.intercorrenciaTexto.trim(),
     materiais:S.material?S.materiais:[], pedidos:S.pedido?S.pedidos:[], pedidoTexto:S.pedidoTexto.trim(),
     fiscal:!!S.fiscal, fiscalOrdem:!!S.fiscalOrdem, ordens:S.ordens, ordemTexto:S.ordemTexto.trim(),
@@ -313,6 +344,8 @@ function textoWhats(p, id){
   let t=`*DIÁRIO DA OBRA ${id?"· "+id:""}*\nObra: ${CFG.obra.cod} - ${CFG.obra.nome}\nEmpreiteiro: ${CFG.emp.nome}\nDia: ${br(p.dataRef)}${p.dia==="ontem"?" (ENVIADO COM ATRASO)":""}\n`+
     `Tempo: manhã ${p.clima.manha} (${p.trabalho.manha?"trabalhou":"NÃO trabalhou"}) · tarde ${p.clima.tarde} (${p.trabalho.tarde?"trabalhou":"NÃO trabalhou"})\n`+
     `Equipe: ${ef}\nServiços:\n${et}\nParadas:\n${pa}\n`;
+  const eq=Object.entries(p.equipamentos||{}).map(([k,v])=>`${v.qtd} ${k} (${v.origem==="LHC"?"da LHC":v.origem==="PROPRIO"?"próprio":"não sabe"})`).join(", ");
+  if(eq) t+=`Equipamentos: ${eq}\n`;
   if(p.intercorrencias.length) t+=`Fora do normal: ${p.intercorrencias.join(", ")}${p.intercorrenciaTexto?" - "+p.intercorrenciaTexto:""}\n`;
   if(p.materiais.length) t+=`Material recebido: ${p.materiais.join(", ")}\n`;
   if(p.pedidos.length) t+=`Faltando: ${p.pedidos.join(", ")}${p.pedidoTexto?" - "+p.pedidoTexto:""}\n`;
@@ -330,18 +363,38 @@ async function enviar(){
   }
   const p=payload(), b=$("#btnEnviar"); b.disabled=true; b.textContent="ENVIANDO…";
   if(CFG.demo){ setTimeout(()=>telaFim(p,"DEMO-0001",true),600); return; }
+  const r=await postEnvio(p);
+  tratarResposta(p,r);
+}
+/* Separa falta de sinal (rede) de recusa do servidor (link, data, ocupado).
+   v06 tratava tudo como "sem conexão" e guardava como pendente um envio que nunca seria aceito. */
+async function postEnvio(p){
+  let j;
   try{
     const r=await fetch(API_URL,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify({acao:"enviar",dados:p})});
-    const j=await r.json();
-    if(!j.ok) throw new Error(j.erro||"erro");
-    lsDel("rdo-rascunho-"+CFG.token+"-"+hojeISO());
-    telaFim(p,j.id,true);
-  }catch(err){
-    lsSet("rdo-pendente-"+CFG.token, p);
-    telaFim(p,null,false);
-  }
+    j=await r.json();
+  }catch(err){ return {tipo:"rede"}; }
+  if(j && j.ok) return {tipo:"ok", id:j.id};
+  return {tipo:"recusa", erro:(j&&j.erro)||"interno"};
 }
-function telaFim(p,id,ok){
+const RECUSAS={
+  link:{guardar:false, titulo:"Este link não está mais ativo", txt:"O diário não foi aceito. Fale com o engenheiro da LHC para receber o link certo."},
+  data:{guardar:false, titulo:"Esse dia não pode mais ser enviado", txt:"O sistema só aceita hoje e ontem. Mande o diário pelo WhatsApp para o engenheiro da LHC."},
+  ocupado:{guardar:true, titulo:"Sistema ocupado agora", txt:"O diário ficou guardado neste celular. Toque em TENTAR DE NOVO daqui a um minuto."},
+  interno:{guardar:true, titulo:"O sistema não conseguiu gravar", txt:"O diário ficou guardado neste celular. Tente de novo; se continuar, mande pelo WhatsApp."}
+};
+function tratarResposta(p,r){
+  if(r.tipo==="ok"){
+    lsDel("rdo-rascunho-"+CFG.token+"-"+hojeISO()); lsDel("rdo-rascunho-"+CFG.token+"-"+hojeISO(-1)); lsDel("rdo-pendente-"+CFG.token);
+    telaFim(p,r.id,true); return;
+  }
+  const info=r.tipo==="rede"
+    ? {guardar:true, titulo:"Sem conexão agora", txt:"O diário ficou guardado neste celular. Tente de novo quando tiver sinal, ou mande pelo WhatsApp."}
+    : (RECUSAS[r.erro]||RECUSAS.interno);
+  if(info.guardar) lsSet("rdo-pendente-"+CFG.token, p); else lsDel("rdo-pendente-"+CFG.token);
+  telaFim(p,null,false,info);
+}
+function telaFim(p,id,ok,info){
   $("#rodape").classList.add("escondido");
   const app=$("#app"); app.innerHTML="";
   const fotos=`*FOTOS DO DIÁRIO ${id||""}*\nObra: ${CFG.obra.cod} - ${CFG.obra.nome}\nEmpreiteiro: ${CFG.emp.nome}\nDia: ${br(p.dataRef)}\n(mande as fotos logo abaixo desta mensagem)`;
@@ -355,19 +408,19 @@ function telaFim(p,id,ok){
       el("button",{class:"btn sec",type:"button",onclick:()=>{S=estadoNovo();render();window.scrollTo(0,0);}},"Fazer outro envio")));
   }else{
     app.append(el("div",{class:"fim"},
-      el("h2",{style:"justify-content:center"},"Sem conexão agora"),
-      el("p",{},"O diário ficou guardado neste celular. Tente de novo quando tiver sinal, ou mande pelo WhatsApp."),
-      el("button",{class:"btn",type:"button",onclick:()=>reenviarPendente()},"TENTAR DE NOVO"),
+      el("h2",{style:"justify-content:center"},info.titulo),
+      el("p",{},info.txt),
+      info.guardar?el("button",{class:"btn",type:"button",onclick:()=>reenviarPendente()},"TENTAR DE NOVO"):"",
       el("a",{href:linkZap(textoWhats(p,null)),target:"_blank",rel:"noopener"},el("button",{class:"btn sec",type:"button"},"MANDAR PELO WHATSAPP"))));
   }
 }
 async function reenviarPendente(){
   const p=lsGet("rdo-pendente-"+CFG.token); if(!p) return;
-  try{
-    const r=await fetch(API_URL,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify({acao:"enviar",dados:p})});
-    const j=await r.json(); if(!j.ok) throw new Error(j.erro);
-    lsDel("rdo-pendente-"+CFG.token); telaFim(p,j.id,true);
-  }catch(e){ alertaSimples("Ainda sem conexão. Tente de novo em alguns minutos."); }
+  const r=await postEnvio(p);
+  if(r.tipo==="rede"){ alertaSimples("Ainda sem conexão. Tente de novo em alguns minutos."); return; }
+  if(r.tipo==="recusa" && (RECUSAS[r.erro]||RECUSAS.interno).guardar){ alertaSimples((RECUSAS[r.erro]||RECUSAS.interno).titulo+". Tente de novo em alguns minutos."); return; }
+  $("#rodape").classList.add("escondido");
+  tratarResposta(p,r);
 }
 function alertaSimples(msg){ const d=el("div",{class:"erro"},msg); $("#app").prepend(d); setTimeout(()=>d.remove(),5000); }
 
@@ -385,7 +438,9 @@ async function iniciar(){
   }
   $("#hObra").textContent=CFG.obra.cod+" · "+CFG.obra.nome;
   $("#hEmp").textContent=CFG.emp.nome;
-  S=lsGet("rdo-rascunho-"+CFG.token+"-"+hojeISO()) || estadoNovo();
+  // rascunho salvo por versão anterior ganha os campos novos
+  S=Object.assign(estadoNovo(), lsGet("rdo-rascunho-"+CFG.token+"-"+hojeISO()) || {});
+  if(CFG.aceitaOntem===false) S.dia="hoje";
   render();
   if(!CFG.demo && lsGet("rdo-pendente-"+CFG.token)){
     const d=el("div",{class:"erro"},"Existe um envio anterior que não chegou. ",el("button",{class:"btn sec",type:"button",style:"margin-top:8px",onclick:reenviarPendente},"ENVIAR O PENDENTE"));
